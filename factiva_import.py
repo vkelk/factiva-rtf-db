@@ -2,10 +2,11 @@ from datetime import datetime
 import logging
 import logging.config
 import os
+# from pprint import pprint
 import re
 
 import settings
-from db_helper import Session, FileInfo
+from db_helper import Session, Articles
 
 
 def create_logger():
@@ -139,25 +140,25 @@ def striprtf(text):
 def parser(data):
     # Original funcion from http://www.kaikaichen.com/?p=539
     articles = []
+    dicts = []
     start = re.search(r'\tHD\t', data).start()
-    for m in re.finditer(r'Document [a-zA-Z0-9]{25}\t', data):
+    for m in re.finditer(r'Document [a-zA-Z0-9]{25}', data):
         end = m.end()
         a = data[start:end].strip()
-        a = '\t' + a
+        a = '\n\t' + a
         articles.append(a)
         start = end
 
     # In each article, find all used Intelligence Indexing field codes. Extract
-    # content of each used field code, and write to a CSV file.
+    # content of each used field code, and export as a list of dicts.
 
     # All field codes (order matters)
-    fields = ['HD', 'CR', 'WC', 'PD', 'ET', 'SN', 'SC', 'ED', 'PG', 'LA', 'CY', 'LP',
-              'TD', 'CT', 'RF', 'CO', 'IN', 'NS', 'RE', 'IPC', 'IPD', 'PUB', 'AN', 'DE',
-              'HLP', 'SE', 'CLM', 'HL', 'CX', 'BY', 'NGC', 'GC', 'VOL', 'ART', 'FDS', 'RIC']
+    fields = ['CLM', 'SE', 'HD', 'BY', 'CR', 'WC', 'PD', 'ET', 'SN', 'SC', 'ED', 'PG', 'VOL', 'LA', 'CY', 'LP',
+              'TD', 'CT', 'RF', 'CO', 'IN', 'NS', 'RE', 'IPC', 'IPD', 'PUB', 'AN']
 
     for a in articles:
-        used = [f for f in fields if re.search(r'\t' + f + r'\t', a)]
-        unused = [[i, f] for i, f in enumerate(fields) if not re.search(r'\t' + f + r'\t', a)]
+        used = [f for f in fields if re.search(r'\n\t' + f + r'\t', a)]
+        unused = [[i, f] for i, f in enumerate(fields) if not re.search(r'\n\t' + f + r'\t', a)]
         fields_pos = []
         for f in used:
             f_m = re.search(r'\t' + f + r'\t', a)
@@ -174,27 +175,49 @@ def parser(data):
             content = a[start:end].strip()
             obs.append(content)
         for f in unused:
-            obs.insert(f[0], '')
+            obs.insert(f[0], None)
         raw_dict = dict(zip(fields, obs))
-        raw_dict['text'] = raw_dict['LP'] + '\n\n' + raw_dict['TD']
-        print(raw_dict['text'])
-        exit()
-        return raw_dict
+        raw_dict['id'] = raw_dict['AN'].replace('Document', '').strip()
+        raw_dict['text'] = str(raw_dict['LP']) + '\n\n' + str(raw_dict['TD'])
+        raw_dict['WC'] = re.findall(r'\d+', raw_dict['WC'].replace(",", ""))[0]
+        try:
+            raw_dict['PD'] = datetime.strptime(raw_dict['PD'], '%d %B %Y') if raw_dict['PD'] else None
+        except Exception:
+            logger.warning('Cannot convert date [%s]', raw_dict['PD'])
+        try:
+            raw_dict['ET'] = datetime.strptime(raw_dict['ET'], '%H:%M') if raw_dict['ET'] else None
+        except Exception:
+            logger.warning('Cannot convert time [%s]', raw_dict['ET'])
+        dicts.append(raw_dict)
+    return dicts
 
 
 def process_file(fname):
     file_location = os.path.join(settings.RTF_DIR, fname)
     logger.info('Opening file %s...', fname)
     session = Session()
-    db_file_info = session.query(FileInfo).filter_by(filename=fname).first()
-    if db_file_info and db_file_info.status == 'finished':
-        logger.info('File %s already in database', fname)
-        return None
+    # db_file_info = session.query(FileInfo).filter_by(filename=fname).first()
+    # if db_file_info and db_file_info.status == 'finished':
+    #     logger.info('File %s already in database', fname)
+    #     return None
     with open(file_location, 'rb') as rtf_file:
         txt = rtf_file.read()
-        clean_text = striprtf(txt)
-        parser(clean_text)
-        pass
+    clean_text = striprtf(txt)
+    dicts = parser(clean_text)
+    if len(dicts) == 0:
+        logger.error('Cannot extract articles from file %s', fname)
+        return None
+    logger.info('Found %d articles in file %s', len(dicts), fname)
+    for dict_item in dicts:
+        article = session.query(Articles).filter_by(id=dict_item['id']).first()
+        if article:
+            logger.info('Article %s already exists in database', article.id)
+        else:
+            article = Articles(**dict_item)
+            session.add(article)
+            session.commit()
+    session.close()
+    logger.info('Finished parsing file %s...', fname)
 
 
 logger = create_logger()
@@ -207,10 +230,3 @@ if __name__ == "__main__":
     for file in files:
         process_file(file)
     exit()
-    
-    file1 = open(raw_data_folder + 'Factiva-20180619-1930.rtf', 'rb')
-    txt = file1.read()
-    # print(striprtf(txt))
-    # with open('test.txt', 'w') as f:
-    #     f.write(striprtf(txt))
-    print(parser(striprtf(txt)))

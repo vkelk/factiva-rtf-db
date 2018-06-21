@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Date, Time, Text
+from sqlalchemy import create_engine, MetaData, Column, Integer, String, DateTime, Date, Time, Text
 from sqlalchemy import exc as sqlaException
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
@@ -39,63 +39,54 @@ except sqlaException.ProgrammingError:
     pass
 
 db_meta = MetaData(bind=db_engine, schema=pg_config['schema'])
-session_factory = sessionmaker(db_engine, autocommit=True, autoflush=True)
+session_factory = sessionmaker(db_engine)
 Session = scoped_session(session_factory)
 
 
-class FileInfo(Base):
-    __tablename__ = 'fileinfo'
-    __table_args__ = {"schema": pg_config['schema']}
+# class FileInfo(Base):
+#     __tablename__ = 'fileinfo'
+#     __table_args__ = {"schema": pg_config['schema']}
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    filename = Column(String)
-    fileloc = Column(String(512))
-    status = Column(String(12))
-    created = Column(DateTime, default=datetime.utcnow)
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+#     filename = Column(String)
+#     fileloc = Column(String(512))
+#     status = Column(String(12))
+#     created = Column(DateTime, default=datetime.utcnow)
 
 
 class Articles(Base):
     __tablename__ = 'articles'
     __table_args__ = {"schema": pg_config['schema']}
 
-    id = Column(String(32), primary_key=True)
+    id = Column(String(25), primary_key=True)
     text = Column(Text)
-    AN = Column(String(64))
-    HL = Column(String)
-    HLP = Column(String)
-    SE = Column(String)
     CLM = Column(String)
+    SE = Column(String)
     HD = Column(Text)
-    CX = Column(String)
-    LP = Column(Text)
     BY = Column(String)
+    CR = Column(String)
     WC = Column(Integer)
     PD = Column(Date)
     ET = Column(Time)
-    CR = Column(String)
     SN = Column(String)
     SC = Column(String)
-    NGC = Column(String)
-    GC = Column(String)
     ED = Column(String)
     PG = Column(String)
     VOL = Column(String)
     LA = Column(String)
     CY = Column(String)
+    LP = Column(Text)
     TD = Column(Text)
     CT = Column(String)
     RF = Column(String)
-    ART = Column(String)
     CO = Column(String)
-    FDS = Column(String)
-    RIC = Column(String)
     IN = Column(Text)
     NS = Column(Text)
     RE = Column(Text)
     IPC = Column(String)
     IPD = Column(String)
-    DE = Column(String)
     PUB = Column(String)
+    AN = Column(String(35))
     created = Column(DateTime, default=datetime.utcnow)
 
 
