@@ -1,4 +1,6 @@
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime
+from datetime import datetime
+
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, DateTime, Date, Time, Text
 from sqlalchemy import exc as sqlaException
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
@@ -45,11 +47,56 @@ class FileInfo(Base):
     __tablename__ = 'fileinfo'
     __table_args__ = {"schema": pg_config['schema']}
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     filename = Column(String)
-    fileloc = Column(String)
+    fileloc = Column(String(512))
     status = Column(String(12))
-    created = Column(DateTime)
+    created = Column(DateTime, default=datetime.utcnow)
+
+
+class Articles(Base):
+    __tablename__ = 'articles'
+    __table_args__ = {"schema": pg_config['schema']}
+
+    id = Column(String(32), primary_key=True)
+    text = Column(Text)
+    AN = Column(String(64))
+    HL = Column(String)
+    HLP = Column(String)
+    SE = Column(String)
+    CLM = Column(String)
+    HD = Column(Text)
+    CX = Column(String)
+    LP = Column(Text)
+    BY = Column(String)
+    WC = Column(Integer)
+    PD = Column(Date)
+    ET = Column(Time)
+    CR = Column(String)
+    SN = Column(String)
+    SC = Column(String)
+    NGC = Column(String)
+    GC = Column(String)
+    ED = Column(String)
+    PG = Column(String)
+    VOL = Column(String)
+    LA = Column(String)
+    CY = Column(String)
+    TD = Column(Text)
+    CT = Column(String)
+    RF = Column(String)
+    ART = Column(String)
+    CO = Column(String)
+    FDS = Column(String)
+    RIC = Column(String)
+    IN = Column(Text)
+    NS = Column(Text)
+    RE = Column(Text)
+    IPC = Column(String)
+    IPD = Column(String)
+    DE = Column(String)
+    PUB = Column(String)
+    created = Column(DateTime, default=datetime.utcnow)
 
 
 Base.metadata.create_all(db_engine)

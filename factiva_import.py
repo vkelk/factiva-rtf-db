@@ -152,7 +152,8 @@ def parser(data):
 
     # All field codes (order matters)
     fields = ['HD', 'CR', 'WC', 'PD', 'ET', 'SN', 'SC', 'ED', 'PG', 'LA', 'CY', 'LP',
-              'TD', 'CT', 'RF', 'CO', 'IN', 'NS', 'RE', 'IPC', 'IPD', 'PUB', 'AN']
+              'TD', 'CT', 'RF', 'CO', 'IN', 'NS', 'RE', 'IPC', 'IPD', 'PUB', 'AN', 'DE',
+              'HLP', 'SE', 'CLM', 'HL', 'CX', 'BY', 'NGC', 'GC', 'VOL', 'ART', 'FDS', 'RIC']
 
     for a in articles:
         used = [f for f in fields if re.search(r'\t' + f + r'\t', a)]
@@ -174,7 +175,11 @@ def parser(data):
             obs.append(content)
         for f in unused:
             obs.insert(f[0], '')
-        return dict(zip(fields, obs))
+        raw_dict = dict(zip(fields, obs))
+        raw_dict['text'] = raw_dict['LP'] + '\n\n' + raw_dict['TD']
+        print(raw_dict['text'])
+        exit()
+        return raw_dict
 
 
 def process_file(fname):
@@ -185,7 +190,10 @@ def process_file(fname):
     if db_file_info and db_file_info.status == 'finished':
         logger.info('File %s already in database', fname)
         return None
-    with open(file_location, 'r', encoding='utf-8') as rtf_file:
+    with open(file_location, 'rb') as rtf_file:
+        txt = rtf_file.read()
+        clean_text = striprtf(txt)
+        parser(clean_text)
         pass
 
 
