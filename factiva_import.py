@@ -137,11 +137,15 @@ def striprtf(text):
     return ''.join(out)
 
 
-def parser(data):
+def parser(data, fname):
     # Original funcion from http://www.kaikaichen.com/?p=539
     articles = []
     dicts = []
-    start = re.search(r'\tHD\t', data).start()
+    try:
+        start = re.search(r'\tHD\t', data).start()
+    except AttributeError:
+        logger.warning('Skipping file [%s]', fname)
+        return []
     for m in re.finditer(r'Document [a-zA-Z0-9]{25}', data):
         end = m.end()
         a = data[start:end].strip()
@@ -206,7 +210,7 @@ def process_file(fname):
     with open(file_location, 'rb') as rtf_file:
         txt = rtf_file.read()
     clean_text = striprtf(txt)
-    dicts = parser(clean_text)
+    dicts = parser(clean_text, fname)
     if len(dicts) == 0:
         logger.error('Cannot extract articles from file %s', fname)
         return None
