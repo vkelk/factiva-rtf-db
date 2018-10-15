@@ -177,9 +177,12 @@ def parser(data):
         for f in unused:
             obs.insert(f[0], None)
         raw_dict = dict(zip(fields, obs))
-        raw_dict['id'] = raw_dict['AN'].replace('Document', '').strip()
-        raw_dict['text'] = str(raw_dict['LP']) + '\n\n' + str(raw_dict['TD'])
-        raw_dict['WC'] = re.findall(r'\d+', raw_dict['WC'].replace(",", ""))[0]
+        try:
+            raw_dict['id'] = raw_dict['AN'].replace('Document', '').strip()
+            raw_dict['text'] = str(raw_dict['LP']) + '\n\n' + str(raw_dict['TD'])
+            raw_dict['WC'] = re.findall(r'\d+', raw_dict['WC'].replace(",", ""))[0]
+        except AttributeError:
+            continue
         try:
             raw_dict['PD'] = datetime.strptime(raw_dict['PD'], '%d %B %Y') if raw_dict['PD'] else None
         except Exception:
