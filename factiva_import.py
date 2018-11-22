@@ -11,7 +11,7 @@ from db_helper import Session, Articles
 
 def create_logger():
     log_file = 'factiva_' + str(datetime.now().strftime('%Y-%m-%d')) + '.log'
-    logging.config.fileConfig('log.ini', defaults={'logfilename': log_file})
+    logging.config.fileConfig('log.ini', defaults={'logfilename': log_file}, disable_existing_loggers=False)
     return logging.getLogger(__name__)
 
 
@@ -207,8 +207,13 @@ def process_file(fname):
     # if db_file_info and db_file_info.status == 'finished':
     #     logger.info('File %s already in database', fname)
     #     return None
-    with open(file_location, 'rb') as rtf_file:
-        txt = rtf_file.read()
+    if fname.startswith('~$'):
+        return None
+    try:
+        with open(file_location, 'rb') as rtf_file:
+            txt = rtf_file.read()
+    except Exception:
+        logger.warning('Cannot read from file %s', fname)
     clean_text = striprtf(txt)
     dicts = parser(clean_text, fname)
     if len(dicts) == 0:

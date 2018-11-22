@@ -1,4 +1,5 @@
 from datetime import datetime
+import logging
 
 from sqlalchemy import create_engine, MetaData, Column, Integer, String, DateTime, Date, Time, Text
 from sqlalchemy import exc as sqlaException
@@ -16,7 +17,8 @@ pg_config = {
     'database': settings.DB_NAME,
     'schema': settings.DB_SCHEMA
 }
-pg_dsn = "postgresql+psycopg2://{username}:{password}@{host}:5432/{database}".format(**pg_config)
+logger = logging.getLogger(__name__)
+pg_dsn = "postgresql+psycopg2://{username}:{password}@{host}:5432/postgres".format(**pg_config)
 Base = declarative_base()
 db_engine = create_engine(
     pg_dsn,
@@ -29,15 +31,24 @@ db_engine = create_engine(
 try:
     conn = db_engine.connect()
     conn.execute("commit")
-    conn.execute("create database tweet")
+    conn.execute("create database {}".format(pg_config['database']))
     conn.close()
-except sqlaException.ProgrammingError:
-    pass
+except sqlaException.ProgrammingError as Exception:
+    logger.warning('%s', str(Exception))
+
+pg_dsn = "postgresql+psycopg2://{username}:{password}@{host}:5432/{database}".format(**pg_config)
+db_engine = create_engine(
+    pg_dsn,
+    connect_args={"application_name": 'factiva:' + str(__name__)},
+    pool_size=100,
+    pool_recycle=600,
+    max_overflow=0,
+    encoding='utf-8'
+    )
 try:
     db_engine.execute(CreateSchema(pg_config['schema']))
 except sqlaException.ProgrammingError:
     pass
-
 db_meta = MetaData(bind=db_engine, schema=pg_config['schema'])
 session_factory = sessionmaker(db_engine)
 Session = scoped_session(session_factory)
