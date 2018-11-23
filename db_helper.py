@@ -1,7 +1,7 @@
 from datetime import datetime
 import logging
 
-from sqlalchemy import create_engine, MetaData, Column, Integer, String, DateTime, Date, Time, Text
+from sqlalchemy import create_engine, MetaData, Column, Integer, String, DateTime, Date, Time, Text, Float
 from sqlalchemy import exc as sqlaException
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
@@ -34,7 +34,7 @@ try:
     conn.execute("create database {}".format(pg_config['database']))
     conn.close()
 except sqlaException.ProgrammingError as Exception:
-    logger.warning('%s', str(Exception))
+    pass
 
 pg_dsn = "postgresql+psycopg2://{username}:{password}@{host}:5432/{database}".format(**pg_config)
 db_engine = create_engine(
@@ -98,6 +98,29 @@ class Articles(Base):
     IPD = Column(String)
     PUB = Column(String)
     AN = Column(String(35))
+    created = Column(DateTime, default=datetime.utcnow)
+
+
+class Analysis(Base):
+    __tablename__ = 'analysis'
+    __table_args__ = {"schema": pg_config['schema']}
+
+    id = Column(String(25), primary_key=True)
+    word_count = Column(Integer)
+    positive = Column(Float)
+    negative = Column(Float)
+    uncertainty = Column(Float)
+    litigious = Column(Float)
+    modal_weak = Column(Float)
+    modal_moderate = Column(Float)
+    modal_strong = Column(Float)
+    constraining = Column(Float)
+    alphabetic = Column(Integer)
+    digits = Column(Integer)
+    numbers = Column(Integer)
+    avg_syllables_per_word = Column(Float)
+    avg_word_length = Column(Float)
+    vocabulary = Column(Integer)
     created = Column(DateTime, default=datetime.utcnow)
 
 
