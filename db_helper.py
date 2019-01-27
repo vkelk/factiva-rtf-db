@@ -1,7 +1,7 @@
 from datetime import datetime
 import logging
 
-from sqlalchemy import create_engine, MetaData, Column, Integer, String, DateTime, Date, Time, Text, Float
+from sqlalchemy import create_engine, MetaData, Column, Integer, String, DateTime, Date, Time, Text, Float, ForeignKey
 from sqlalchemy import exc as sqlaException
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
@@ -23,7 +23,7 @@ Base = declarative_base()
 db_engine = create_engine(
     pg_dsn,
     connect_args={"application_name": 'factiva:' + str(__name__)},
-    pool_size=100,
+    pool_size=200,
     pool_recycle=600,
     max_overflow=0,
     encoding='utf-8'
@@ -40,7 +40,7 @@ pg_dsn = "postgresql+psycopg2://{username}:{password}@{host}:5432/{database}".fo
 db_engine = create_engine(
     pg_dsn,
     connect_args={"application_name": 'factiva:' + str(__name__)},
-    pool_size=100,
+    pool_size=200,
     pool_recycle=600,
     max_overflow=0,
     encoding='utf-8'
@@ -52,6 +52,7 @@ except sqlaException.ProgrammingError:
 db_meta = MetaData(bind=db_engine, schema=pg_config['schema'])
 session_factory = sessionmaker(db_engine)
 Session = scoped_session(session_factory)
+# Session = sessionmaker(bind=db_engine, autoflush=False)
 
 
 # class FileInfo(Base):
@@ -69,7 +70,7 @@ class Articles(Base):
     __tablename__ = 'articles'
     __table_args__ = {"schema": pg_config['schema']}
 
-    id = Column(String(25), primary_key=True)
+    id = Column(String, primary_key=True)
     text = Column(Text)
     CLM = Column(String)
     SE = Column(String)
@@ -97,7 +98,7 @@ class Articles(Base):
     IPC = Column(String)
     IPD = Column(String)
     PUB = Column(String)
-    AN = Column(String(35))
+    AN = Column(String)
     created = Column(DateTime, default=datetime.utcnow)
 
 
@@ -105,7 +106,7 @@ class Analysis(Base):
     __tablename__ = 'analysis'
     __table_args__ = {"schema": pg_config['schema']}
 
-    id = Column(String(25), primary_key=True)
+    id = Column(String, primary_key=True)
     word_count = Column(Integer)
     positive = Column(Float)
     negative = Column(Float)
@@ -122,6 +123,27 @@ class Analysis(Base):
     avg_word_length = Column(Float)
     vocabulary = Column(Integer)
     created = Column(DateTime, default=datetime.utcnow)
+
+
+class Company(Base):
+    __tablename__ = 'companies'
+    __table_args__ = {"schema": pg_config['schema']}
+
+    gvkey = Column(String, primary_key=True)
+    name = Column(String)
+    factiva_name = Column(String)
+    factiva_code = Column(String)
+
+
+class CompanyArticle(Base):
+    __tablename__ = 'company_articles'
+    __table_args__ = {"schema": pg_config['schema']}
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    gvkey = Column(String, ForeignKey(pg_config['schema'] + '.companies.gvkey'), index=True)
+    article_id = Column(String, ForeignKey(pg_config['schema'] + '.articles.id'), index=True)
+    main_category = Column()
+    sub_category = Column()
 
 
 Base.metadata.create_all(db_engine)
