@@ -30,7 +30,7 @@ if __name__ == '__main__':
                 categories.append(article.sub_category)
             categories = set(categories)
             for category in categories:
-                if len(category.trim()) > 0:
+                if category is not None and len(category.strip()) > 0:
                     df.at[i, category] = 'Yes'
             print(df.loc[i])
     df.to_stata('output.dta', write_index=False)
