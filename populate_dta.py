@@ -1,10 +1,11 @@
+import re
 import pandas as pd
 
-import settings
-from db_helper import Session, Articles, Analysis, Company, CompanyArticle, sessionmaker, db_engine
+from db_helper import Session, Articles, CompanyArticle
 
 
 file_path = 'sample_file.dta'
+
 
 def get_articles(gvket, date):
     session = Session()
@@ -13,6 +14,10 @@ def get_articles(gvket, date):
         .filter(CompanyArticle.gvkey == gvkey) \
         .filter(Articles.PD == date)
     return q.all()
+
+
+def slugify(s):
+    return re.sub('[^\w]+', '_', s).strip().lower()[:32]
 
 
 if __name__ == '__main__':
@@ -31,6 +36,7 @@ if __name__ == '__main__':
             categories = set(categories)
             for category in categories:
                 if category is not None and len(category.strip()) > 0:
+                    category = slugify(category)
                     df.at[i, category] = 'Yes'
             print(df.loc[i])
     df.to_stata('output.dta', write_index=False)
