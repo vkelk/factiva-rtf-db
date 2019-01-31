@@ -30,25 +30,20 @@ def slugify(s):
 
 if __name__ == '__main__':
     df = pd.read_stata(file_path)
-    # df.to_csv('output1.csv')
-    # exit()
-    # df_output = pd.DataFrame()
-    # print(df.head())
     for i in df.index:
-        # print(df.iloc[i])
-        # exit()
         gvkey = str(df.at[i, 'gvkey']).rstrip('.0')
         date = df.at[i, 'date'].date()
         print(gvkey, date)
         articles = get_articles(gvkey, date)
         if len(articles) > 0:
-            df.at[i, 'news_count'] = len(articles)
+            df.at[i, 'news_count'] = float(len(articles))
             categories = []
             word_count = 0
             positive = 0
             negative = 0
             uncertain = 0
             for article in articles:
+                print('Getting data for article', article.article_id)
                 categories.append(article.main_category)
                 categories.append(article.sub_category)
                 analysis_data = get_analysis(article.article_id)
@@ -57,11 +52,29 @@ if __name__ == '__main__':
                     positive += analysis_data.positive
                     negative += analysis_data.negative
                     uncertain += analysis_data.uncertainty
-            df.at[i, 'word_count'] = word_count
+                else:
+                    df.at[i, 'no_sentient'] = 'Yes'
+            df.at[i, 'word_count'] = float(word_count)
+            df.at[i, 'positive'] = float(positive)
+            df.at[i, 'negative'] = float(negative)
+            df.at[i, 'uncertain'] = float(uncertain)
+            if positive == 0.0 and negative == 0.0 and uncertain == 0.0:
+                df.at[i, 'no_sentient'] = 'Yes'
             categories = set(categories)
             for category in categories:
                 if category is not None and len(category.strip()) > 0:
                     category = slugify(category)
                     df.at[i, category] = 'Yes'
             print(df.loc[i])
-    df.to_stata('output.dta', write_index=False)
+    try:
+        df.to_csv('output.csv')
+        print('CSV file exported.')
+    except Exception as e:
+        print('Could not export CSV file.')
+        print(type(e), str(e))
+    try:
+        df.to_stata('output.dta', write_index=False)
+        print('DTA file exported.')
+    except Exception as e:
+        print('Could not export DTA file.')
+        print(type(e), str(e))
