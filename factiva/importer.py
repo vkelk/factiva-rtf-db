@@ -1,18 +1,13 @@
 from datetime import datetime
 import logging
-import logging.config
 import os
-# from pprint import pprint
 import re
 
 import settings
-from db_helper import Session, Articles
+from .models import Session, Articles
 
 
-def create_logger():
-    log_file = 'factiva_' + str(datetime.now().strftime('%Y-%m-%d')) + '.log'
-    logging.config.fileConfig('log.ini', defaults={'logfilename': log_file}, disable_existing_loggers=False)
-    return logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def striprtf(text):
@@ -227,14 +222,3 @@ def process_file(fname):
     session.close()
     logger.info('Finished parsing file %s...', fname)
 
-
-logger = create_logger()
-
-
-if __name__ == "__main__":
-    logger.info('*** PARSING STARTED')
-    files = [f for f in os.listdir(settings.RTF_DIR) if f.endswith('.rtf')]
-    logger.info('Found %s "rtf" files in dir %s', len(files), settings.RTF_DIR)
-    for file in files:
-        process_file(file)
-    exit()
