@@ -132,6 +132,15 @@ def striprtf(text):
     return ''.join(out)
 
 
+def report_file(fname):
+    report_filename = 'importer_' + str(datetime.now().strftime('%Y-%m-%d'))
+    try:
+        with open(report_filename, 'a') as file:
+            file.writelines('input')
+    except Exception:
+        logger.exception('message')
+
+
 def parser(data, fname):
     # Original funcion from http://www.kaikaichen.com/?p=539
     articles = []
@@ -139,7 +148,8 @@ def parser(data, fname):
     try:
         start = re.search(r'\tHD\t', data).start()
     except AttributeError:
-        logger.warning('Skipping file [%s]', fname)
+        logger.warning('Skipping file [%s], HD index not found', fname)
+        report_file(fname)
         return []
     for m in re.finditer(r'Document [a-zA-Z0-9]{25}', data):
         end = m.end()

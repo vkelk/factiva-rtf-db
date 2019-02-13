@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def analyze_artices():
+    logger.info('*** Analyzing Started...')
     session = Session()
     articles = session.query(Articles) \
         .outerjoin(Analysis, Analysis.id == Articles.id)\
@@ -27,3 +28,4 @@ def analyze_artices():
         a = Analysis(**analyzed_dict)
         session.add(a)
     session.commit()
+    logger.info('*** Analyzing Finished...')

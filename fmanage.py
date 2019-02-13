@@ -33,6 +33,7 @@ def upload_files():
 
 
 def run_counts():
+    logger.info('*** Starting counts')
     file_path = 'input_file.xlsx'
     if not os.path.exists(file_path):
         logger.warning('Filename %s not found', file_path)
@@ -40,7 +41,7 @@ def run_counts():
     df_input = pd.read_excel(file_path)
     df_output = pd.DataFrame()
     for i in df_input.index:
-        gvkey = str(df_input.at[i, 'gvkey']).rstrip('.0')
+        gvkey = str(df_input.at[i, 'gvkey']).rstrip('.0').lstrip('0')
         # date = df.at[i, 'date'].date()
         # print(gvkey, date)
         articles = get_articles(gvkey)
@@ -59,7 +60,7 @@ def run_counts():
                 negative = 0
                 uncertain = 0
                 for j, article_id in enumerate(article.article_ids):
-                    print('Getting data for article', article_id)
+                    logger.info('Getting data for article %s', article_id)
                     categories.append(article.main_cats[j])
                     categories.append(article.sub_cats[j])
                     analysis_data = get_analysis(article_id)
@@ -85,16 +86,17 @@ def run_counts():
                 index2 += 1
     try:
         df_output.to_csv('output.csv')
-        print('CSV file exported.')
-    except Exception as e:
-        print('Could not export CSV file.')
-        print(type(e), str(e))
+        logger.info('CSV file exported.')
+    except Exception:
+        logger.warning('Could not export CSV file.')
+        logger.exception('message')
     try:
         df_output.to_stata('output.dta', write_index=False)
-        print('DTA file exported.')
-    except Exception as e:
-        print('Could not export DTA file.')
-        print(type(e), str(e))
+        logger.info('DTA file exported.')
+    except Exception:
+        logger.warning('Could not export DTA file.')
+        logger.exception('message')
+    logger.info('*** Finished counts')
 
 
 logger = create_logger()
@@ -121,7 +123,6 @@ if __name__ == '__main__':
     if args.upload: 
         upload_files()
     if args.analyze:
-        logger.info('*** Analyzing STARTED...')
         analyze_artices()
     if args.counts:
         run_counts()
