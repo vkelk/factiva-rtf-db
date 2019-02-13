@@ -9,7 +9,7 @@ import pandas as pd
 from factiva import settings
 from factiva.importer import process_file
 from factiva.analyze import analyze_artices
-from factiva.counts import get_articles, get_analysis, slugify
+from factiva.counts import get_articles, get_analysis, slugify, validate_date
 
 
 MAIN_DIR = os.path.abspath(os.path.join(os.path.abspath(__file__), os.pardir))
@@ -49,7 +49,8 @@ def run_counts():
                 df_output.at[index2, 'gvkey'] = gvkey
                 df_output.at[index2, 'co_name'] = df_input.at[i, 'co_name']
                 df_output.at[index2, 'factiva_code'] = df_input.at[i, 'factiva_code']
-                df_output.at[index2, 'date'] = pd.to_datetime(article.PD)
+                date = validate_date(article.PD)
+                df_output.at[index2, 'date'] = pd.to_datetime(date)
                 df_output.at[index2, 'news_count'] = float(len(article.article_ids))
                 categories = []
                 word_count = 0
@@ -93,6 +94,7 @@ def run_counts():
     except Exception as e:
         print('Could not export DTA file.')
         print(type(e), str(e))
+
 
 logger = create_logger()
 

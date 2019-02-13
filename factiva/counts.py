@@ -1,6 +1,6 @@
 import re
 from sqlalchemy.dialects.postgresql import array_agg
-from .models import Session, Articles, CompanyArticle, Analysis
+from .models import Session, Articles, CompanyArticle, Analysis, TradingDay
 
 
 def get_articles(gvkey, date=None):
@@ -29,3 +29,11 @@ def get_analysis(article_id):
 
 def slugify(s):
     return re.sub('[^\w]+', '_', s).strip().lower()[:32]
+
+
+def validate_date(date):
+    session = Session()
+    q = session.query(TradingDay.date).filter(TradingDay.date >= date)
+    if q is not None:
+        return q.first()[0]
+    return None
