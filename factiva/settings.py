@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 
 
-load_dotenv(dotenv_path='../.env')
+load_dotenv(dotenv_path='.env')
 
 DB_USER = os.environ.get('DB_USER', 'postgres')
 DB_PASS = os.environ.get('DB_PASS', '')

@@ -3,8 +3,8 @@ import logging
 import os
 import re
 
-import settings
-from .models import Session, Articles
+from factiva import settings
+from .models import Session, Articles, Company, CompanyArticle
 
 
 logger = logging.getLogger(__name__)
@@ -194,31 +194,92 @@ def parser(data, fname):
     return dicts
 
 
-def process_file(fname):
-    file_location = os.path.join(settings.RTF_DIR, fname)
-    logger.info('Opening file %s...', fname)
+def process_file(file_location):
+    logger.info('Opening file %s...', file_location)
     session = Session()
-    if fname.startswith('~$'):
+    if file_location.startswith('~$'):
         return None
     try:
         with open(file_location, 'rb') as rtf_file:
             txt = rtf_file.read()
     except Exception:
-        logger.warning('Cannot read from file %s', fname)
+        logger.warning('Cannot read from file %s', file_location)
     clean_text = striprtf(txt)
-    dicts = parser(clean_text, fname)
+    dicts = parser(clean_text, file_location)
     if len(dicts) == 0:
-        logger.error('Cannot extract articles from file %s', fname)
+        logger.error('Cannot extract articles from file %s', file_location)
         return None
-    logger.info('Found %d articles in file %s', len(dicts), fname)
+    logger.info('Found %d articles in file %s', len(dicts), file_location)
     for dict_item in dicts:
         article = session.query(Articles).filter_by(id=dict_item['id']).first()
         if article:
             logger.info('Article %s already exists in database', article.id)
         else:
-            article = Articles(**dict_item)
-            session.add(article)
-            session.commit()
+            try:
+                article = Articles(**dict_item)
+                session.add(article)
+                session.commit()
+                match_company(article)
+            except Exception:
+                logger.exception('message')
+                raise
     session.close()
-    logger.info('Finished parsing file %s...', fname)
+    logger.info('Finished parsing file %s...', file_location)
 
+
+def match_company(article):
+    co_list = article.CO.split('|')
+    if len(co_list) > 0:
+        for organization in co_list:
+            inserted = insert_comp_art(organization, article)
+    else:
+        logger.warning('Could not get company codes for article %s', article.id)
+
+
+def get_company_by_code(code):
+    try:
+        session = Session()
+        q = session.query(Company).filter(Company.factiva_code == code).first()
+        if q is None:
+            logger.warning('Could not match company with code %s', code)
+            return None
+        return q
+    except Exception:
+        logger.exception('message')
+        raise
+
+
+def insert_comp_art(organization, article):
+    try:
+        session = Session()
+        org_list = organization.split(':')
+        code = org_list[0].strip().upper()
+        company = get_company_by_code(code)
+        if company is None:
+            return None
+        com_art = CompanyArticle(
+            gvkey=company.gvkey,
+            article_id=article.id
+        )
+        if article.NS is not None:
+            ns_list = article.NS.split('|')
+        else:
+            ns_list = []
+        i = 0
+        for cat in ns_list:
+            cat_list = cat.split(':')
+            match_cnum = re.match('c\d+', cat_list[0].strip())
+            if i > 2 or match_cnum is None:
+                continue
+            i += 1
+            if i == 1:
+                com_art.main_category = cat_list[1].strip()
+            if i == 2:
+                com_art.sub_category = cat_list[1].strip()
+        session.add(com_art)
+        session.commit()
+        logger.info('Matched company %s to article %s', company.factiva_name, com_art.article_id)
+        session.close()
+    except Exception:
+        logger.exception('message')
+        raise

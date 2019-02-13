@@ -2,7 +2,7 @@ from datetime import datetime
 import logging
 
 
-import settings
+from factiva import settings
 from .models import Session, Articles, Analysis
 from .Generic_Parser import get_data
 
@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 
 def analyze_artices():
     session = Session()
-    articles = session.query(Articles).all()
+    articles = session.query(Articles) \
+        .outerjoin(Analysis, Analysis.id == Articles.id)\
+        .filter(Analysis.id.is_(None)).all()
     for article in articles:
         analysed = session.query(Analysis).filter_by(id=article.id).first()
         if analysed:

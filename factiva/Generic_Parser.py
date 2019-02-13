@@ -39,12 +39,12 @@ import string
 import sys
 import time
 # sys.path.append('D:\GD\Python\TextualAnalysis\Modules')  # Modify to identify path for custom modules
-import Load_MasterDictionary as LM
+import factiva.Load_MasterDictionary as LM
 
 # User defined directory for files to be parsed
 TARGET_FILES = r'D:/Temp/TestParse/*.*'
 # User defined file pointer to LM dictionary
-MASTER_DICTIONARY_FILE = 'LoughranMcDonald_MasterDictionary_2014.csv'
+MASTER_DICTIONARY_FILE = 'LoughranMcDonald_MasterDictionary_2016.csv'
 # User defined output file
 OUTPUT_FILE = r'D:/Temp/Parser.csv'
 # Setup output

@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import CreateSchema
 
-import settings
+from factiva import settings
 
 pg_config = {
     'username': settings.DB_USER,

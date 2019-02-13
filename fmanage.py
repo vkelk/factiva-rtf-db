@@ -27,7 +27,8 @@ def upload_files():
     files = [f for f in os.listdir(RTF_DIR) if f.endswith('.rtf')]
     logger.info('Found %s "rtf" files in dir %s', len(files), RTF_DIR)
     for file in files:
-        process_file(file)
+        file_location = os.path.join(RTF_DIR, file)
+        process_file(file_location)
     logger.info('Upload process finished.')
 
 
@@ -80,7 +81,7 @@ def run_counts():
                     if category is not None and len(category.strip()) > 0:
                         category = slugify(category)
                         df_output.at[index2, category] = 'Yes'
-                print(df_output.loc[index2])
+                # print(df_output.loc[index2])
                 index2 += 1
     try:
         df_output.to_csv('output.csv')
