@@ -40,13 +40,13 @@ def run_counts():
         return None
     df_input = pd.read_excel(file_path)
     df_output = pd.DataFrame()
+    index2 = 1
     for i in df_input.index:
         gvkey = str(df_input.at[i, 'gvkey']).rstrip('.0').lstrip('0')
         # date = df.at[i, 'date'].date()
         # print(gvkey, date)
         articles = get_articles(gvkey)
         if len(articles) > 0:
-            index2 = 1
             for article in articles:
                 df_output.at[index2, 'gvkey'] = gvkey
                 df_output.at[index2, 'co_name'] = df_input.at[i, 'co_name']
