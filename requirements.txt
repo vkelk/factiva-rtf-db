@@ -4,4 +4,5 @@ SQLAlchemy>=1.2.8
 flake8>=3.6.0
 pandas>=0.24.0
 xlrd>=1.2.0
+-e git://github.com/vkelk/pysentiment.git
 # alembic>=1.0.7
