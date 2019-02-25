@@ -2,7 +2,7 @@ from datetime import datetime
 import logging
 
 from sqlalchemy import (
-    create_engine, MetaData, Column, ForeignKey,
+    create_engine, MetaData, Column, ForeignKey, inspect,
     Integer, String, DateTime, Date, Time, Text, Float, Boolean
 )
 from sqlalchemy import exc as sqlaException
@@ -115,6 +115,8 @@ class Analysis(Base):
     vocabulary = Column(Integer)
     created = Column(DateTime, default=datetime.utcnow)
 
+    def _asdict(self):
+        return {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
 
 class Company(Base):
     __tablename__ = 'companies'

@@ -12,8 +12,9 @@ from factiva.analyze import analyze_artices
 from factiva.counts import get_articles, get_analysis, slugify, validate_date
 
 
-MAIN_DIR = os.path.abspath(os.path.join(os.path.abspath(__file__), os.pardir))
-RTF_DIR = os.path.join(MAIN_DIR, 'rtfs')
+MAIN_DIR = settings.MAIN_DIR
+RTF_DIR = settings.RTF_DIR
+DICTS_FOLDER = settings.DICTS_FOLDER
 
 
 def create_logger():

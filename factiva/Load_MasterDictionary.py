@@ -5,7 +5,7 @@
 import time
 
 
-def load_masterdictionary(file_path, print_flag=False, f_log=None, get_other=False):
+def load_masterdictionary(file_path, print_flag=False, dict_type=None, f_log=None, get_other=False):
     _master_dictionary = {}
     _sentiment_categories = ['negative', 'positive', 'uncertainty', 'litigious', 'constraining',
                              'strong_modal', 'weak_modal']
@@ -13,25 +13,28 @@ def load_masterdictionary(file_path, print_flag=False, f_log=None, get_other=Fal
     # Dropped from nltk: A, I, S, T, DON, WILL, AGAINST
     # Added: AMONG,
     _stopwords = ['ME', 'MY', 'MYSELF', 'WE', 'OUR', 'OURS', 'OURSELVES', 'YOU', 'YOUR', 'YOURS',
-                    'YOURSELF', 'YOURSELVES', 'HE', 'HIM', 'HIS', 'HIMSELF', 'SHE', 'HER', 'HERS', 'HERSELF',
-                    'IT', 'ITS', 'ITSELF', 'THEY', 'THEM', 'THEIR', 'THEIRS', 'THEMSELVES', 'WHAT', 'WHICH',
-                    'WHO', 'WHOM', 'THIS', 'THAT', 'THESE', 'THOSE', 'AM', 'IS', 'ARE', 'WAS', 'WERE', 'BE',
-                    'BEEN', 'BEING', 'HAVE', 'HAS', 'HAD', 'HAVING', 'DO', 'DOES', 'DID', 'DOING', 'AN',
-                    'THE', 'AND', 'BUT', 'IF', 'OR', 'BECAUSE', 'AS', 'UNTIL', 'WHILE', 'OF', 'AT', 'BY',
-                    'FOR', 'WITH', 'ABOUT', 'BETWEEN', 'INTO', 'THROUGH', 'DURING', 'BEFORE',
-                    'AFTER', 'ABOVE', 'BELOW', 'TO', 'FROM', 'UP', 'DOWN', 'IN', 'OUT', 'ON', 'OFF', 'OVER',
-                    'UNDER', 'AGAIN', 'FURTHER', 'THEN', 'ONCE', 'HERE', 'THERE', 'WHEN', 'WHERE', 'WHY',
-                    'HOW', 'ALL', 'ANY', 'BOTH', 'EACH', 'FEW', 'MORE', 'MOST', 'OTHER', 'SOME', 'SUCH',
-                    'NO', 'NOR', 'NOT', 'ONLY', 'OWN', 'SAME', 'SO', 'THAN', 'TOO', 'VERY', 'CAN',
-                    'JUST', 'SHOULD', 'NOW']
+        'YOURSELF', 'YOURSELVES', 'HE', 'HIM', 'HIS', 'HIMSELF', 'SHE', 'HER', 'HERS', 'HERSELF',
+        'IT', 'ITS', 'ITSELF', 'THEY', 'THEM', 'THEIR', 'THEIRS', 'THEMSELVES', 'WHAT', 'WHICH',
+        'WHO', 'WHOM', 'THIS', 'THAT', 'THESE', 'THOSE', 'AM', 'IS', 'ARE', 'WAS', 'WERE', 'BE',
+        'BEEN', 'BEING', 'HAVE', 'HAS', 'HAD', 'HAVING', 'DO', 'DOES', 'DID', 'DOING', 'AN',
+        'THE', 'AND', 'BUT', 'IF', 'OR', 'BECAUSE', 'AS', 'UNTIL', 'WHILE', 'OF', 'AT', 'BY',
+        'FOR', 'WITH', 'ABOUT', 'BETWEEN', 'INTO', 'THROUGH', 'DURING', 'BEFORE',
+        'AFTER', 'ABOVE', 'BELOW', 'TO', 'FROM', 'UP', 'DOWN', 'IN', 'OUT', 'ON', 'OFF', 'OVER',
+        'UNDER', 'AGAIN', 'FURTHER', 'THEN', 'ONCE', 'HERE', 'THERE', 'WHEN', 'WHERE', 'WHY',
+        'HOW', 'ALL', 'ANY', 'BOTH', 'EACH', 'FEW', 'MORE', 'MOST', 'OTHER', 'SOME', 'SUCH',
+        'NO', 'NOR', 'NOT', 'ONLY', 'OWN', 'SAME', 'SO', 'THAN', 'TOO', 'VERY', 'CAN',
+        'JUST', 'SHOULD', 'NOW']
 
     with open(file_path) as f:
         _total_documents = 0
         _md_header = f.readline()
         for line in f:
             cols = line.split(',')
-            _master_dictionary[cols[0]] = MasterDictionary(cols, _stopwords)
-            _total_documents += _master_dictionary[cols[0]].doc_count
+            if dict_type == 'LM':
+                _master_dictionary[cols[0]] = LmDictionary(cols, _stopwords)
+                _total_documents += _master_dictionary[cols[0]].doc_count
+            else:
+                _master_dictionary[cols[0]] = Hiv4Dictionary(cols, _stopwords)
             if len(_master_dictionary) % 5000 == 0 and print_flag:
                 print('\r ...Loading Master Dictionary' + ' {}'.format(len(_master_dictionary)), end='', flush=True)
 
@@ -69,7 +72,7 @@ def create_sentimentdictionaries(_master_dictionary, _sentiment_categories):
     return _sentiment_dictionary
 
 
-class MasterDictionary:
+class LmDictionary:
     def __init__(self, cols, _stopwords):
         self.word = cols[0].upper()
         self.sequence_number = int(cols[1])
@@ -107,6 +110,43 @@ class MasterDictionary:
         self.harvard_iv = int(cols[16])
         self.syllables = int(cols[17])
         self.source = cols[18]
+
+        if self.word in _stopwords:
+            self.stopword = True
+        else:
+            self.stopword = False
+        return
+
+
+class Hiv4Dictionary:
+    def __init__(self, cols, _stopwords):
+        self.word = cols[0].upper()
+        self.Source = cols[1]
+        self.Positiv = cols[2]
+        self.Negativ = cols[3]
+        self.Pstv = cols[4]
+        self.Affil = cols[5]
+        self.Ngtv = cols[6]
+        self.Hostile = cols[7]
+        self.Strong = cols[8]
+        self.Power = cols[9]
+        self.Weak = cols[10]
+        self.Submit = cols[11]
+        self.Active = cols[12]
+        self.Passive = cols[13]
+        self.sentiment = {}
+        self.sentiment['Positiv'] = bool(self.Positiv)
+        self.sentiment['Negativ'] = bool(self.Negativ)
+        self.sentiment['Pstv'] = bool(self.Pstv)
+        self.sentiment['Affil'] = bool(self.Affil)
+        self.sentiment['Ngtv'] = bool(self.Ngtv)
+        self.sentiment['Hostile'] = bool(self.Hostile)
+        self.sentiment['Strong'] = bool(self.Strong)
+        self.sentiment['Power'] = bool(self.Power)
+        self.sentiment['Weak'] = bool(self.Weak)
+        self.sentiment['Submit'] = bool(self.Submit)
+        self.sentiment['Active'] = bool(self.Active)
+        self.sentiment['Passive'] = bool(self.Passive)
 
         if self.word in _stopwords:
             self.stopword = True

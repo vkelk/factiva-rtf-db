@@ -78,7 +78,6 @@ def main():
 
 
 def get_data(doc):
-
     vdictionary = {}
     _odata = [0] * 17
     total_syllables = 0
