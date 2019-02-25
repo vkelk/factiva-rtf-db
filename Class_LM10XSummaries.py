@@ -101,8 +101,3 @@ if __name__ == '__main__':
             break
 
     print('\n\nNormal termination.\n{0}\n'.format(time.strftime('%c')))
-
-
-
-
-

@@ -4,6 +4,7 @@
 
 import time
 
+
 def load_masterdictionary(file_path, print_flag=False, f_log=None, get_other=False):
     _master_dictionary = {}
     _sentiment_categories = ['negative', 'positive', 'uncertainty', 'litigious', 'constraining',
@@ -112,6 +113,7 @@ class MasterDictionary:
         else:
             self.stopword = False
         return
+
 
 if __name__ == '__main__':
     # Full test program in /TextualAnalysis/TestPrograms/Test_Load_MasterDictionary.py
