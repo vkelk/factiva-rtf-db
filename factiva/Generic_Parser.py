@@ -34,6 +34,7 @@ The program outputs:
 
 import csv
 import glob
+import os
 import re
 import string
 import sys
@@ -41,10 +42,12 @@ import time
 # sys.path.append('D:\GD\Python\TextualAnalysis\Modules')  # Modify to identify path for custom modules
 import factiva.Load_MasterDictionary as LM
 
+from factiva import settings
+
 # User defined directory for files to be parsed
 TARGET_FILES = r'D:/Temp/TestParse/*.*'
 # User defined file pointer to LM dictionary
-MASTER_DICTIONARY_FILE = 'LoughranMcDonald_MasterDictionary_2016.csv'
+# MASTER_DICTIONARY_FILE = 'LoughranMcDonald_MasterDictionary_2016.csv'
 # User defined output file
 OUTPUT_FILE = r'D:/Temp/Parser.csv'
 # Setup output
@@ -53,7 +56,8 @@ OUTPUT_FIELDS = ['file name,', 'file size,', 'number of words,', '% positive,', 
                  '% modal strong,', '% constraining,', '# of alphanumeric,', '# of digits,',
                  '# of numbers,', 'avg # of syllables per word,', 'average word length,', 'vocabulary']
 
-lm_dictionary = LM.load_masterdictionary(MASTER_DICTIONARY_FILE, True)
+lm_dictionary_path = os.path.join(settings.DICTS_FOLDER, settings.LM_DICTIONARY_FILE)
+lm_dictionary = LM.load_masterdictionary(lm_dictionary_path, True, dict_type='LM')
 
 
 def main():

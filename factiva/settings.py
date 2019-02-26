@@ -12,6 +12,7 @@ DB_NAME = os.environ.get('DB_NAME', 'factiva')
 DB_SCHEMA = os.environ.get('DB_SCHEMA', 'factiva')
 
 HIV4_DICTIONARY_FILE = 'HIV-4.csv'
+LM_DICTIONARY_FILE = 'LoughranMcDonald_MasterDictionary_2016.csv'
 MAIN_DIR = os.path.abspath(os.path.join(os.path.abspath(__file__), os.pardir))
 RTF_DIR = os.path.join(MAIN_DIR, 'rtfs')
 DICTS_FOLDER = os.path.join(MAIN_DIR, 'dictionaries')

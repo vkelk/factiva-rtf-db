@@ -148,4 +148,25 @@ class TradingDay(Base):
     is_trading = Column(Boolean, default=True)
 
 
+class SentimentHarvard(Base):
+    __tablename__ = 'sentiment_harvard'
+    __table_args__ = {"schema": pg_config['schema']}
+
+    article_id = Column(String, ForeignKey(pg_config['schema'] + '.articles.id'), primary_key=True)
+    word_count = Column(Integer)
+    positiv = Column(Float)
+    negativ = Column(Float)
+    pstv = Column(Float)
+    affil = Column(Float)
+    ngtv = Column(Float)
+    hostile = Column(Float)
+    strong = Column(Float)
+    power = Column(Float)
+    weak = Column(Float)
+    submit = Column(Float)
+    active = Column(Float)
+    passive = Column(Float)
+    created = Column(DateTime, default=datetime.utcnow)
+
+
 Base.metadata.create_all(db_engine)
