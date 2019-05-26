@@ -118,6 +118,7 @@ class Analysis(Base):
     def _asdict(self):
         return {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
 
+
 class Company(Base):
     __tablename__ = 'companies'
     __table_args__ = {"schema": pg_config['schema']}
@@ -135,8 +136,8 @@ class CompanyArticle(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     gvkey = Column(String, ForeignKey(pg_config['schema'] + '.companies.gvkey'), index=True)
     article_id = Column(String, ForeignKey(pg_config['schema'] + '.articles.id'), index=True)
-    main_category = Column()
-    sub_category = Column()
+    main_category = Column(String)
+    sub_category = Column(String)
 
 
 class TradingDay(Base):
