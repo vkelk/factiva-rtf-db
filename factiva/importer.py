@@ -2,7 +2,6 @@ from datetime import datetime
 import logging
 import os
 import re
-import olefile
 
 from factiva import settings
 from .models import Session, Articles, Company, CompanyArticle
@@ -142,22 +141,34 @@ def report_file(fname):
         logger.exception('message')
 
 
-def parser(data, fname):
+def parser(data, fname, is_transcript=False):
     # Original funcion from http://www.kaikaichen.com/?p=539
     articles = []
     dicts = []
-    try:
-        start = re.search(r'\tHD\t', data).start()
-    except AttributeError:
-        logger.warning('Skipping file [%s], HD index not found', fname)
-        report_file(fname)
-        return []
-    for m in re.finditer(r'Document [a-zA-Z0-9]{25}', data):
-        end = m.end()
+    if is_transcript:
+        try:
+            start = re.search(r'HD', data).start()
+            end = re.search(r'Document [a-zA-Z0-9]{25}', data).end()
+        except AttributeError:
+            logger.warning('Skipping file [%s], HD or Document index not found', fname)
+            report_file(fname)
+            return []
         a = data[start:end].strip()
-        a = '\n\t' + a
+        a = '\n' + a
         articles.append(a)
-        start = end
+    else:
+        try:
+            start = re.search(r'\tHD\t', data).start()
+        except AttributeError:
+            logger.warning('Skipping file [%s], HD index not found', fname)
+            report_file(fname)
+            return []
+        for m in re.finditer(r'Document [a-zA-Z0-9]{25}', data):
+            end = m.end()
+            a = data[start:end].strip()
+            a = '\n\t' + a
+            articles.append(a)
+            start = end
 
     # In each article, find all used Intelligence Indexing field codes. Extract
     # content of each used field code, and export as a list of dicts.
@@ -167,15 +178,25 @@ def parser(data, fname):
               'TD', 'CT', 'RF', 'CO', 'IN', 'NS', 'RE', 'IPC', 'IPD', 'PUB', 'AN']
 
     for a in articles:
-        used = [f for f in fields if re.search(r'\n\t' + f + r'\t', a)]
-        unused = [[i, f] for i, f in enumerate(fields) if not re.search(r'\n\t' + f + r'\t', a)]
+        if is_transcript:
+            used = [f for f in fields if re.search(r'\n' + f, a)]
+            unused = [[i, f] for i, f in enumerate(fields) if not re.search(f, a)]
+        else:
+            used = [f for f in fields if re.search(r'\n\t' + f + r'\t', a)]
+            unused = [[i, f] for i, f in enumerate(fields) if not re.search(r'\n\t' + f + r'\t', a)]
         fields_pos = []
         for f in used:
-            f_m = re.search(r'\t' + f + r'\t', a)
-            f_pos = [f, f_m.start(), f_m.end()]
-            fields_pos.append(f_pos)
+            if is_transcript:
+                f_m = re.search(r'\n' + f, a)
+                f_pos = [f, f_m.start(), f_m.end()]
+                fields_pos.append(f_pos)
+            else:
+                f_m = re.search(r'\t' + f + r'\t', a)
+                f_pos = [f, f_m.start(), f_m.end()]
+                fields_pos.append(f_pos)
         obs = []
         n = len(used)
+        raw_dict = {}
         for i in range(0, n):
             start = fields_pos[i][2]
             if i < n - 1:
@@ -183,10 +204,11 @@ def parser(data, fname):
             else:
                 end = len(a)
             content = a[start:end].strip()
+            raw_dict[fields_pos[i][0]] = content
             obs.append(content)
         for f in unused:
             obs.insert(f[0], None)
-        raw_dict = dict(zip(fields, obs))
+            raw_dict[f[1]] = None
         try:
             raw_dict['id'] = raw_dict['AN'].replace('Document', '').strip()
             raw_dict['text'] = str(raw_dict['LP']) + '\n\n' + str(raw_dict['TD'])
@@ -211,21 +233,18 @@ def process_file(file_location, is_transcript=False):
     if file_location.startswith('~$'):
         return None
     try:
-        with open(file_location, encoding='cp1006') as rtf_file:
-            print(rtf_file)
+        with open(file_location, 'rb') as rtf_file:
             rtf = rtf_file.read()
-            print(rtf)
     except Exception:
         logger.warning('Cannot read from file %s', file_location)
         logger.exception('message')
     clean_text = striprtf(rtf)
-    print(clean_text)
-    exit()
-    dicts = parser(clean_text, file_location)
+    dicts = parser(clean_text, file_location, is_transcript)
     if len(dicts) == 0:
         logger.error('Cannot extract articles from file %s', file_location)
         return None
     logger.info('Found %d articles in file %s', len(dicts), file_location)
+    exit()
     for dict_item in dicts:
         article = session.query(Articles).filter_by(id=dict_item['id']).first()
         if article:
