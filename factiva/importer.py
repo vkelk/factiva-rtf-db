@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 import os
 import re
+import docx
 
 from factiva import settings
 from .models import Session, Articles, Company, CompanyArticle
@@ -81,7 +82,7 @@ def striprtf(text):
     ucskip = 1              # Number of ASCII characters to skip after a unicode character.
     curskip = 0             # Number of ASCII characters left to skip
     out = []                # Output buffer.
-    for match in pattern.finditer(text.decode()):
+    for match in pattern.finditer(text):
         word, arg, hex, char, brace, tchar = match.groups()
         if brace:
             curskip = 0
@@ -139,6 +140,14 @@ def report_file(fname):
             file.writelines('input')
     except Exception:
         logger.exception('message')
+
+
+def get_text_from_word(filename):
+    doc = docx.Document(filename)
+    full_text = []
+    for para in doc.paragraphs:
+        full_text.append(para.text)
+    return "\n".join(full_text)
 
 
 def parser(data, fname, is_transcript=False):
@@ -233,12 +242,15 @@ def process_file(file_location, is_transcript=False):
     if file_location.startswith('~$'):
         return None
     try:
-        with open(file_location, 'rb') as rtf_file:
-            rtf = rtf_file.read()
+        if is_transcript:
+            clean_text = get_text_from_word(file_location)
+        else:
+            with open(file_location, 'rb') as rtf_file:
+                rtf = rtf_file.read().decode()
+            clean_text = striprtf(rtf)
     except Exception:
         logger.warning('Cannot read from file %s', file_location)
         logger.exception('message')
-    clean_text = striprtf(rtf)
     dicts = parser(clean_text, file_location, is_transcript)
     if len(dicts) == 0:
         logger.error('Cannot extract articles from file %s', file_location)

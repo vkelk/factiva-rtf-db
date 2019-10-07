@@ -13,10 +13,7 @@ python-dotenv = "*"
 sqlalchemy = "*"
 xlrd = "*"
 pysentiment = {editable = true,git = "git://github.com/vkelk/pysentiment.git"}
-rtfunicode = "*"
-striprtf = "*"
-chardet = "*"
-olefile = "*"
+python-docx = "*"
 
 [requires]
 python_version = "3.7"
