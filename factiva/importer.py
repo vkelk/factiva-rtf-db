@@ -2,6 +2,7 @@ from datetime import datetime
 import logging
 import os
 import re
+import olefile
 
 from factiva import settings
 from .models import Session, Articles, Company, CompanyArticle
@@ -204,17 +205,22 @@ def parser(data, fname):
     return dicts
 
 
-def process_file(file_location):
+def process_file(file_location, is_transcript=False):
     logger.info('Opening file %s...', file_location)
     session = Session()
     if file_location.startswith('~$'):
         return None
     try:
-        with open(file_location, 'rb') as rtf_file:
-            txt = rtf_file.read()
+        with open(file_location, encoding='cp1006') as rtf_file:
+            print(rtf_file)
+            rtf = rtf_file.read()
+            print(rtf)
     except Exception:
         logger.warning('Cannot read from file %s', file_location)
-    clean_text = striprtf(txt)
+        logger.exception('message')
+    clean_text = striprtf(rtf)
+    print(clean_text)
+    exit()
     dicts = parser(clean_text, file_location)
     if len(dicts) == 0:
         logger.error('Cannot extract articles from file %s', file_location)

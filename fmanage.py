@@ -15,6 +15,7 @@ from factiva.counts import get_articles, get_analysis, slugify, validate_date
 MAIN_DIR = settings.MAIN_DIR
 RTF_DIR = settings.RTF_DIR
 DICTS_FOLDER = settings.DICTS_FOLDER
+TRANSCRIPTS_DIR = settings.TRANSCRIPTS_DIR
 
 
 def create_logger():
@@ -30,6 +31,16 @@ def upload_files():
     for file in files:
         file_location = os.path.join(RTF_DIR, file)
         process_file(file_location)
+    logger.info('Upload process finished.')
+
+
+def upload_transcripts():
+    logger.info('*** Uploadding STARTED')
+    files = [f for f in os.listdir(TRANSCRIPTS_DIR) if f.endswith('.rtf')]
+    logger.info('Found %s "rtf" files in dir %s', len(files), TRANSCRIPTS_DIR)
+    for file in files:
+        file_location = os.path.join(TRANSCRIPTS_DIR, file)
+        process_file(file_location, is_transcript=True)
     logger.info('Upload process finished.')
 
 
@@ -111,6 +122,11 @@ if __name__ == '__main__':
         help='Upload files from folder', action='store_true'
     )
     parser.add_argument(
+        '-ut',
+        '--upload_transcripts',
+        help='Upload trancsript files from folder', action='store_true'
+    )
+    parser.add_argument(
         '-a',
         '--analyze',
         help='Run text analyze in articles in database', action='store_true'
@@ -127,3 +143,5 @@ if __name__ == '__main__':
         analyze_artices()
     if args.counts:
         run_counts()
+    if args.upload_transcripts:
+        upload_transcripts()

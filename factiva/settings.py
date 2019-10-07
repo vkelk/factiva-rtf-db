@@ -15,4 +15,5 @@ HIV4_DICTIONARY_FILE = 'HIV-4.csv'
 LM_DICTIONARY_FILE = 'LoughranMcDonald_MasterDictionary_2016.csv'
 MAIN_DIR = os.path.abspath(os.path.join(os.path.abspath(__file__), os.pardir))
 RTF_DIR = os.path.join(MAIN_DIR, 'rtfs')
+TRANSCRIPTS_DIR = os.path.join(RTF_DIR, 'transcripts')
 DICTS_FOLDER = os.path.join(MAIN_DIR, 'dictionaries')

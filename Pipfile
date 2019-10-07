@@ -1,0 +1,22 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+flake8 = "*"
+
+[packages]
+psycopg2-binary = "*"
+pandas = "*"
+python-dotenv = "*"
+sqlalchemy = "*"
+xlrd = "*"
+pysentiment = {editable = true,git = "git://github.com/vkelk/pysentiment.git"}
+rtfunicode = "*"
+striprtf = "*"
+chardet = "*"
+olefile = "*"
+
+[requires]
+python_version = "3.7"
