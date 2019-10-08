@@ -17,3 +17,4 @@ MAIN_DIR = os.path.abspath(os.path.join(os.path.abspath(__file__), os.pardir))
 RTF_DIR = os.path.join(MAIN_DIR, 'rtfs')
 TRANSCRIPTS_DIR = os.path.join(RTF_DIR, 'transcripts')
 DICTS_FOLDER = os.path.join(MAIN_DIR, 'dictionaries')
+MANIFEST_FILE = 'transcripts.csv'

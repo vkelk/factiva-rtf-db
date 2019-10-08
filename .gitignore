@@ -109,3 +109,4 @@ Pipfile.lock
 *.log
 /.vscode
 *.dta
+*/rtfs/*

@@ -170,4 +170,20 @@ class SentimentHarvard(Base):
     created = Column(DateTime, default=datetime.utcnow)
 
 
+class FileInfo(Base):
+    __tablename__ = 'file_info'
+    __table_args__ = {"schema": pg_config['schema']}
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    gvkey = Column(String, index=True)
+    fiscal_qtr = Column(String)
+    document_id = Column(String)
+    file_new_name = Column(String)
+    co_name = Column(String)
+    ticker = Column(String)
+    f_name = Column(String)
+    f_code = Column(String)
+    article_id = Column(String, ForeignKey(pg_config['schema'] + '.articles.id'), nullable=True, unique=True)
+
+
 Base.metadata.create_all(db_engine)

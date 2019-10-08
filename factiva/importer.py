@@ -3,9 +3,10 @@ import logging
 import os
 import re
 import docx
+import pandas as pd
 
 from factiva import settings
-from .models import Session, Articles, Company, CompanyArticle
+from .models import Session, Articles, Company, CompanyArticle, db_engine
 
 
 logger = logging.getLogger(__name__)
@@ -330,3 +331,11 @@ def insert_comp_art(organization, article):
     except Exception:
         logger.exception('message')
         raise
+
+
+def import_manifest(csv_file_path):
+    with open(csv_file_path, 'r') as file:
+        data_df = pd.read_csv(file, sep=';')
+    print(data_df)
+    data_df.to_sql('file_info', con=db_engine, schema=settings.DB_SCHEMA, if_exists='append', index=True, index_label='id', chunksize=1000)
+    return True
