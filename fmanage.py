@@ -7,7 +7,7 @@ import os
 import pandas as pd
 
 from factiva import settings
-from factiva.importer import process_file, import_manifest
+from factiva.importer import process_file
 from factiva.analyze import analyze_artices
 from factiva.counts import get_articles, get_analysis, slugify, validate_date
 
@@ -145,5 +145,4 @@ if __name__ == '__main__':
     if args.counts:
         run_counts()
     if args.upload_transcripts:
-        import_manifest(MANIFEST_FILE)
         upload_transcripts()

@@ -177,13 +177,13 @@ class FileInfo(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     gvkey = Column(String, index=True)
     fiscal_qtr = Column(String)
-    document_id = Column(String)
-    file_new_name = Column(String)
+    document_id = Column(String, index=True)
+    file_new_name = Column(String, index=True)
     co_name = Column(String)
     ticker = Column(String)
     f_name = Column(String)
     f_code = Column(String)
-    article_id = Column(String, ForeignKey(pg_config['schema'] + '.articles.id'), nullable=True, unique=True)
+    article_id = Column(String, ForeignKey(pg_config['schema'] + '.articles.id'), nullable=True, default=None)
 
 
 Base.metadata.create_all(db_engine)

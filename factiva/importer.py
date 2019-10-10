@@ -1,12 +1,13 @@
 from datetime import datetime
 import logging
 import os
+from pprint import pprint
 import re
 import docx
 import pandas as pd
 
 from factiva import settings
-from .models import Session, Articles, Company, CompanyArticle, db_engine
+from .models import Session, Articles, Company, CompanyArticle, db_engine, FileInfo
 
 
 logger = logging.getLogger(__name__)
@@ -228,11 +229,11 @@ def parser(data, fname, is_transcript=False):
         try:
             raw_dict['PD'] = datetime.strptime(raw_dict['PD'], '%d %B %Y') if raw_dict['PD'] else None
         except Exception:
-            logger.warning('Cannot convert date [%s]', raw_dict['PD'])
+            logger.warning('Cannot convert date for %s', raw_dict['AN'])
         try:
             raw_dict['ET'] = datetime.strptime(raw_dict['ET'], '%H:%M') if raw_dict['ET'] else None
         except Exception:
-            logger.warning('Cannot convert time [%s]', raw_dict['ET'])
+            logger.warning('Cannot convert time for %s', raw_dict['AN'])
         dicts.append(raw_dict)
     return dicts
 
@@ -257,8 +258,16 @@ def process_file(file_location, is_transcript=False):
         logger.error('Cannot extract articles from file %s', file_location)
         return None
     logger.info('Found %d articles in file %s', len(dicts), file_location)
-    exit()
     for dict_item in dicts:
+        if is_transcript:
+            filename = os.path.basename(file_location)
+            basename = filename.split('.')[-2]
+            file_info = session.query(FileInfo).filter_by(
+                document_id=dict_item['id'],
+                file_new_name=basename
+            ).one()
+            if file_info is None:
+                continue
         article = session.query(Articles).filter_by(id=dict_item['id']).first()
         if article:
             logger.info('Article %s already exists in database', article.id)
@@ -267,7 +276,11 @@ def process_file(file_location, is_transcript=False):
                 article = Articles(**dict_item)
                 session.add(article)
                 session.commit()
-                match_company(article)
+                if is_transcript:
+                    file_info.article_id = dict_item['id']
+                    session.commit()
+                if 'CO' in dict_item:
+                    match_company(article)
             except Exception:
                 logger.exception('message')
                 raise
@@ -331,11 +344,3 @@ def insert_comp_art(organization, article):
     except Exception:
         logger.exception('message')
         raise
-
-
-def import_manifest(csv_file_path):
-    with open(csv_file_path, 'r') as file:
-        data_df = pd.read_csv(file, sep=';')
-    print(data_df)
-    data_df.to_sql('file_info', con=db_engine, schema=settings.DB_SCHEMA, if_exists='append', index=True, index_label='id', chunksize=1000)
-    return True
