@@ -190,15 +190,15 @@ def parser(data, fname, is_transcript=False):
 
     for a in articles:
         if is_transcript:
-            used = [f for f in fields if re.search(r'\n' + f, a)]
-            unused = [[i, f] for i, f in enumerate(fields) if not re.search(f, a)]
+            used = [f for f in fields if re.search(r'\n' + f + r'\s', a)]
+            unused = [[i, f] for i, f in enumerate(fields) if not re.search(r'\n' + f + r'\s', a)]
         else:
             used = [f for f in fields if re.search(r'\n\t' + f + r'\t', a)]
             unused = [[i, f] for i, f in enumerate(fields) if not re.search(r'\n\t' + f + r'\t', a)]
         fields_pos = []
         for f in used:
             if is_transcript:
-                f_m = re.search(r'\n' + f, a)
+                f_m = re.search(r'\n' + f + r'\s', a)
                 f_pos = [f, f_m.start(), f_m.end()]
                 fields_pos.append(f_pos)
             else:
@@ -225,34 +225,44 @@ def parser(data, fname, is_transcript=False):
             raw_dict['text'] = str(raw_dict['LP']) + '\n\n' + str(raw_dict['TD'])
             raw_dict['WC'] = re.findall(r'\d+', raw_dict['WC'].replace(",", ""))[0]
         except AttributeError:
-            continue
+            pass
         try:
             raw_dict['PD'] = datetime.strptime(raw_dict['PD'], '%d %B %Y') if raw_dict['PD'] else None
         except Exception:
-            logger.warning('Cannot convert date for %s', raw_dict['AN'])
+            logger.warning('Cannot convert date for %s', raw_dict['AN'][:100])
         try:
             raw_dict['ET'] = datetime.strptime(raw_dict['ET'], '%H:%M') if raw_dict['ET'] else None
         except Exception:
-            logger.warning('Cannot convert time for %s', raw_dict['AN'])
+            logger.warning('Cannot convert time for %s', raw_dict['AN'][:100])
         dicts.append(raw_dict)
     return dicts
 
 
 def process_file(file_location, is_transcript=False):
-    logger.info('Opening file %s...', file_location)
+    filename = os.path.basename(file_location)
+    basename = filename.split('.')[-2].strip()
     session = Session()
-    if file_location.startswith('~$'):
+    if filename.startswith('~$'):
         return None
+    logger.info('Procesing file %s...', file_location)
     try:
         if is_transcript:
+            file_in_manifest = session.query(FileInfo).filter(FileInfo.file_new_name == basename).first()
+            if file_in_manifest is None:
+                logger.warning('Filename %s cannot be found in transcripts index', basename)
+                return None
+            elif file_in_manifest.article_id is not None:
+                logger.info('Filename %s already processed with article %s', basename, file_in_manifest.article_id)
+                return None
             clean_text = get_text_from_word(file_location)
         else:
             with open(file_location, 'rb') as rtf_file:
                 rtf = rtf_file.read().decode()
             clean_text = striprtf(rtf)
-    except Exception:
+    except Exception as e:
         logger.warning('Cannot read from file %s', file_location)
-        logger.exception('message')
+        logger.error('%s %s', type(e), str(e))
+        return None
     dicts = parser(clean_text, file_location, is_transcript)
     if len(dicts) == 0:
         logger.error('Cannot extract articles from file %s', file_location)
@@ -260,13 +270,12 @@ def process_file(file_location, is_transcript=False):
     logger.info('Found %d articles in file %s', len(dicts), file_location)
     for dict_item in dicts:
         if is_transcript:
-            filename = os.path.basename(file_location)
-            basename = filename.split('.')[-2]
             file_info = session.query(FileInfo).filter_by(
                 document_id=dict_item['id'],
                 file_new_name=basename
-            ).one()
+            ).first()
             if file_info is None:
+                logger.warning('Filename %s with article id %s is not found in trancripts list', basename, dict_item['id'])
                 continue
         article = session.query(Articles).filter_by(id=dict_item['id']).first()
         if article:
@@ -279,11 +288,10 @@ def process_file(file_location, is_transcript=False):
                 if is_transcript:
                     file_info.article_id = dict_item['id']
                     session.commit()
-                if 'CO' in dict_item:
+                if 'CO' in dict_item and not is_transcript:
                     match_company(article)
             except Exception:
                 logger.exception('message')
-                raise
     session.close()
     logger.info('Finished parsing file %s...', file_location)
 
