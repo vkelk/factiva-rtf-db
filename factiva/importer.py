@@ -271,7 +271,7 @@ def process_file(file_location, is_transcript=False):
     for dict_item in dicts:
         if is_transcript:
             file_info = session.query(FileInfo).filter_by(
-                document_id=dict_item['id'],
+                document_id=dict_item['id'].upper(),
                 file_new_name=basename
             ).first()
             if file_info is None:
