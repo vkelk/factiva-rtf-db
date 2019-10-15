@@ -275,7 +275,7 @@ def process_file(file_location, is_transcript=False):
                 file_new_name=basename
             ).first()
             if file_info is None:
-                logger.warning('Filename %s with article id %s is not found in trancripts list', basename, dict_item['id'])
+                logger.warning('Filename %s with article id %s is not found in trancripts list', basename, dict_item['id'][:100])
                 continue
         article = session.query(Articles).filter_by(id=dict_item['id']).first()
         if article:
