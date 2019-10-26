@@ -15,16 +15,17 @@ logger = logging.getLogger(__name__)
 hiv_dictionary_path = os.path.join(settings.DICTS_FOLDER, settings.HIV4_DICTIONARY_FILE)
 hiv4_dictionary = load_masterdictionary(hiv_dictionary_path, True)
 
+
 def analyze_artices():
     logger.info('*** Analyzing Started...')
     session = Session()
-    articles = session.query(Articles.id, Articles.text) \
+    articles = session.query(Articles.id, Articles.text_clean) \
         .outerjoin(Analysis, Analysis.id == Articles.id)\
         .outerjoin(SentimentHarvard, SentimentHarvard.article_id == Articles.id)\
         .filter(or_(Analysis.id.is_(None), SentimentHarvard.article_id.is_(None))).all()
     i = 0
     for article in articles:
-        text = article.text.rstrip('None')
+        text = article.text_clean.rstrip('None')
         # Loughran-McDonald
         analysed = session.query(Analysis).filter_by(id=article.id).first()
         if analysed is None:
@@ -42,7 +43,7 @@ def analyze_artices():
             hiv4_dict['article_id'] = article.id
             h = SentimentHarvard(**hiv4_dict)
             session.add(h)
-    session.commit()
+        session.commit()
     logger.info('*** Analyzing Finished...')
 
 

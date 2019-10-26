@@ -34,6 +34,7 @@ The program outputs:
 
 import csv
 import glob
+import logging
 import os
 import re
 import string
@@ -58,7 +59,7 @@ OUTPUT_FIELDS = ['file name,', 'file size,', 'number of words,', '% positive,', 
 
 lm_dictionary_path = os.path.join(settings.DICTS_FOLDER, settings.LM_DICTIONARY_FILE)
 lm_dictionary = LM.load_masterdictionary(lm_dictionary_path, True, dict_type='LM')
-
+logger = logging.getLogger(__name__)
 
 def main():
 
@@ -92,7 +93,7 @@ def get_data(doc):
         'avg_syllables_per_word', 'avg_word_length', 'vocabulary'
         ]
 
-    tokens = re.findall('\w+', doc)  # Note that \w+ splits hyphenated words
+    tokens = re.findall(r'\w+', doc)  # Note that \w+ splits hyphenated words
     for token in tokens:
         token = token.upper()
         if not token.isdigit() and len(token) > 1 and token in lm_dictionary:
@@ -113,7 +114,7 @@ def get_data(doc):
     _odata[11] = len(re.findall('[A-Z]', doc))
     _odata[12] = len(re.findall('[0-9]', doc))
     # drop punctuation within numbers for number count
-    doc = re.sub('(?!=[0-9])(\.|,)(?=[0-9])', '', doc)
+    doc = re.sub(r'(?!=[0-9])(\.|,)(?=[0-9])', '', doc)
     doc = doc.translate(str.maketrans(string.punctuation, " " * len(string.punctuation)))
     _odata[13] = len(re.findall(r'\b[-+\(]?[$€£]?[-+(]?\d+\)?\b', doc))
     try:
@@ -121,7 +122,7 @@ def get_data(doc):
         _odata[15] = word_length / _odata[2]
         _odata[16] = len(vdictionary)
     except ZeroDivisionError:
-        pass
+        logger.warning('ZeroDivisionError')
 
     # Convert counts to %
     for i in range(3, 10 + 1):

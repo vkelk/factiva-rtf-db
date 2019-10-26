@@ -1,10 +1,8 @@
 from datetime import datetime
 import logging
 import os
-from pprint import pprint
 import re
 import docx
-import pandas as pd
 
 from factiva import settings
 from .models import Session, Articles, Company, CompanyArticle, db_engine, FileInfo

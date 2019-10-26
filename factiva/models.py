@@ -63,6 +63,7 @@ class Articles(Base):
 
     id = Column(String, primary_key=True)
     text = Column(Text)
+    text_clean = Column(Text)
     CLM = Column(String)
     SE = Column(String)
     HD = Column(Text)
