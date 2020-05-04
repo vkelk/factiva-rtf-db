@@ -286,7 +286,7 @@ def process_file(file_location, is_transcript=False):
                 if is_transcript:
                     file_info.article_id = dict_item['id']
                     session.commit()
-                if 'CO' in dict_item and not is_transcript:
+                if 'CO' in dict_item and article.CO is not None and not is_transcript:
                     match_company(article)
             except Exception:
                 logger.exception('message')
