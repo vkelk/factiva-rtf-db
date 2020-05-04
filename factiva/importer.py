@@ -229,7 +229,8 @@ def process_file(file_location):
                 article = Articles(**dict_item)
                 session.add(article)
                 session.commit()
-                match_company(article)
+                if 'CO' in dict_item and article.CO is not None:
+                    match_company(article)
             except Exception:
                 logger.exception('message')
                 raise
