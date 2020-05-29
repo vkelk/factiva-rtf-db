@@ -1,5 +1,6 @@
 from datetime import datetime
 import logging
+import uuid
 
 from sqlalchemy import (
     create_engine, MetaData, Column, ForeignKey, inspect,
@@ -9,6 +10,7 @@ from sqlalchemy import exc as sqlaException
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import CreateSchema
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 
 from factiva import settings
 
@@ -185,6 +187,19 @@ class FileInfo(Base):
     f_name = Column(String)
     f_code = Column(String)
     article_id = Column(String, ForeignKey(pg_config['schema'] + '.articles.id'), nullable=True, default=None)
+
+
+class Transcript(Base):
+    __tablename__ = 'transcripts'
+    __table_args__ = {"schema": pg_config['schema']}
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    article_id = Column(String, ForeignKey(pg_config['schema'] + '.articles.id'), primary_key=True)
+    sequence = Column(Integer)
+    text = Column(String)
+    author = Column(String)
+    author_data = Column(JSONB)
+
 
 
 Base.metadata.create_all(db_engine)
