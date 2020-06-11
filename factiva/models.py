@@ -201,5 +201,4 @@ class Transcript(Base):
     author_data = Column(JSONB)
 
 
-
 Base.metadata.create_all(db_engine)
