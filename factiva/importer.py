@@ -246,10 +246,10 @@ def process_file(file_location, is_transcript=False):
     try:
         if is_transcript:
             file_in_manifest = session.query(FileInfo).filter(FileInfo.file_new_name == basename).first()
-            if file_in_manifest is None:
+            if file_in_manifest is None and settings.MANIFEST_FILE != '':
                 logger.warning('Filename %s cannot be found in transcripts index', basename)
                 return None
-            elif file_in_manifest.article_id is not None:
+            elif settings.MANIFEST_FILE != '' and file_in_manifest.article_id is not None:
                 logger.info('Filename %s already processed with article %s', basename, file_in_manifest.article_id)
                 return None
             clean_text = get_text_from_word(file_location)
@@ -267,7 +267,7 @@ def process_file(file_location, is_transcript=False):
         return None
     logger.info('Found %d articles in file %s', len(dicts), file_location)
     for dict_item in dicts:
-        if is_transcript:
+        if is_transcript and settings.MANIFEST_FILE != '':
             file_info = session.query(FileInfo).filter_by(
                 document_id=dict_item['id'].upper(),
                 file_new_name=basename
@@ -283,7 +283,7 @@ def process_file(file_location, is_transcript=False):
                 article = Articles(**dict_item)
                 session.add(article)
                 session.commit()
-                if is_transcript:
+                if is_transcript and settings.MANIFEST_FILE != '':
                     file_info.article_id = dict_item['id']
                     session.commit()
                 if 'CO' in dict_item and article.CO is not None and not is_transcript:
