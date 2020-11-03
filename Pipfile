@@ -12,7 +12,7 @@ pandas = "*"
 python-dotenv = "*"
 sqlalchemy = "*"
 xlrd = "*"
-pysentiment = {editable = true,git = "git://github.com/vkelk/pysentiment.git"}
+pysentiment = {editable = true,git = "git+https://github.com/vkelk/pysentiment.git"}
 python-docx = "*"
 
 [requires]
