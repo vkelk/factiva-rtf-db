@@ -15,6 +15,9 @@ xlrd = "*"
 pysentiment = {editable = true,git = "git+https://github.com/vkelk/pysentiment.git"}
 python-docx = "*"
 numpy = "==1.19.3"
+sklearn = "*"
+sparse-dot-topn = "*"
+cleanco = {git = "https://github.com/vkelk/cleanco"}
 
 [requires]
 python_version = "3.7"

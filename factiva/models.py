@@ -22,6 +22,7 @@ pg_config = {
     'database': settings.DB_NAME,
     'schema': settings.DB_SCHEMA
 }
+
 logger = logging.getLogger(__name__)
 pg_dsn = "postgresql+psycopg2://{username}:{password}@{host}:5432/postgres".format(**pg_config)
 Base = declarative_base()
